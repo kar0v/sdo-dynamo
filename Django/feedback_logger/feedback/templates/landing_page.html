@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Logger</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'feedback/styles.css' %}">
+</head>
+<body>
+    <div class="main-container">
+        <div class="container">
+            <h2>Welcome to the Feedback Logger</h2>
+                <style>
+                    p {text-align: center;}
+                </style>
+            <p>Please choose an option below:</p>
+            <ul class="landing-options">
+                <li><a href="/form/" class="btn">Submit Feedback</a></li>
+                <li><a href="/list/" class="btn">View Feedback</a></li>
+            </ul>
+            
+        </div>
+        <div class="footer">
+            <p>Developed by Krasimir Karov</p>
+        </div>
+    </div>
+</body>
+</html>

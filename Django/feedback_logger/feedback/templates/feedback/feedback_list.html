@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback List</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'feedback/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Feedback List</h2>
+        {% if feedbacks %}
+        <ul class="feedback-list">
+            {% for feedback in feedbacks %}
+            <li class="feedback-entry">
+                <div class="feedback-details">
+                    <strong>{{ feedback.name }}</strong> ({{ feedback.email }}) - {{ feedback.created_at|date:"M. d, Y, g:i a" }}<br>
+                    {{ feedback.message }}
+                </div>
+                <div class="feedback-actions">
+                    {% if feedback.attachment %}
+                    <a href="{{ feedback.attachment.url }}" class="btn btn-download">Download</a>
+                    {% endif %}
+                    <a href="{% url 'update_feedback' feedback.id %}" class="btn">Update</a>
+                    <a href="{% url 'delete_feedback' feedback.id %}" class="btn-delete">Delete</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No feedback entries available yet.</p>
+        {% endif %}
+        <a href="/" class="back-link">Go to Home Page</a>
+    </div>
+</body>
+</html>

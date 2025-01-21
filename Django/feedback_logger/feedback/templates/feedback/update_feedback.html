@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Feedback</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'feedback/styles.css' %}">
+</head>
+<body>
+    <div class="main-container">
+        <div class="container">
+            <h2>Update Feedback</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" required>{{ feedback.message }}</textarea>
+                </div>
+                <button type="submit" class="btn">Update</button>
+            </form>
+            <a href="/list/" class="back-link">Cancel</a>
+        </div>
+    </div>
+</body>
+</html>
