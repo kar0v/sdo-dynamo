@@ -108,3 +108,35 @@ resource "aws_route_table_association" "public" {
   subnet_id      = local.public_subnet_ids[count.index]
   route_table_id = aws_route_table.eks.id
 }
+
+resource "aws_network_acl" "public" {
+  vpc_id = aws_vpc.eks.id
+
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  ingress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_network_acl_association" "public" {
+  count          = length(local.public_subnet_ids)
+  subnet_id      = local.public_subnet_ids[count.index]
+  network_acl_id = aws_network_acl.public.id
+}
