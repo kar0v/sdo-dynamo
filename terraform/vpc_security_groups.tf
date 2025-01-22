@@ -8,6 +8,12 @@ resource "aws_security_group" "bastion" {
     protocol    = -1
     cidr_blocks = ["10.200.0.0/16"]
   }
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = var.allowed_ips
+  }
   egress {
     from_port   = 0
     to_port     = 0
