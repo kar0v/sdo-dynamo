@@ -1,0 +1,231 @@
+
+apiVersion: storage.k8s.io/v1 # EBS Storage class
+kind: StorageClass
+metadata:
+  name: ebs-sc
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3 
+  fsType: ext4
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+
+---
+apiVersion: storage.k8s.io/v1 # EFS Storage class
+kind: StorageClass
+metadata:
+  name: efs-sc
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-0074177f3a6975407
+  directoryPerms: "700"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+
+---
+apiVersion: v1 # PersistentVolume for EFS
+kind: PersistentVolume
+metadata:
+  name: feedback-efs-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: efs-sc
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: fs-016adcf0125c8092f
+
+---
+apiVersion: v1 # PersistentVolumeClaim for EFS
+kind: PersistentVolumeClaim
+metadata:
+  name: feedback-efs-pvc
+  namespace: feedback-logger
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: efs-sc
+
+
+---
+apiVersion: v1 # PVC for PSQL
+kind: PersistentVolumeClaim
+metadata:
+  name: feedback-ebs-pvc
+  namespace: feedback-logger
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: ebs-sc
+
+---
+apiVersion: apps/v1 # Deployment for PSQL
+kind: Deployment
+metadata:
+  name: feedback-db
+  namespace: feedback-logger
+  labels:
+    app: feedback-db
+spec:
+  selector:
+    matchLabels:
+      app: feedback-db
+  template:
+    metadata:
+      labels:
+        app: feedback-db
+    spec:
+      containers:
+        - name: feedback-db
+          image: "288761731382.dkr.ecr.eu-central-1.amazonaws.com/feedback-db:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - name: ebs-shared-volume
+              mountPath: /var/lib/postgresql/
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "verysecurepassword"
+      volumes:
+        - name: ebs-shared-volume
+          persistentVolumeClaim:
+            claimName: feedback-ebs-pvc
+
+---
+apiVersion: v1 # Service for PSQL
+kind: Service
+metadata:
+  name: psql
+  namespace: feedback-logger
+spec:
+  selector:
+    app: feedback-db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+---
+apiVersion: apps/v1 # Redis deployment
+kind: Deployment
+metadata:
+  name: redis
+  namespace: feedback-logger
+  labels:
+    app: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: "redis:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 6379
+              protocol: TCP
+          resources:
+            requests:
+              memory: "56Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+
+---
+apiVersion: v1 # Service for Redis
+kind: Service
+metadata:
+  name: redis
+  namespace: feedback-logger
+spec:
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
+
+---
+apiVersion: apps/v1 # webapp
+kind: Deployment
+metadata:
+  name: feedback-logger
+  namespace: feedback-logger
+  labels:
+    app: feedback-logger
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: feedback-logger
+  template:
+    metadata:
+      labels:
+        app: feedback-logger
+    spec:
+      containers:
+        - name: feedback-logger
+          image: "288761731382.dkr.ecr.eu-central-1.amazonaws.com/feedback-logger:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          volumeMounts:
+            - name: efs-shared-volume
+              mountPath: /data/
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+      volumes:
+        - name: efs-shared-volume
+          persistentVolumeClaim:
+            claimName: feedback-efs-pvc
+
+---
+apiVersion: v1 # ALB Service
+kind: Service
+metadata:
+  name: feedback-logger
+  namespace: feedback-logger
+spec:
+  selector:
+    app: feedback-logger
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer

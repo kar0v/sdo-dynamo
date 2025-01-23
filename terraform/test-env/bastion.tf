@@ -110,22 +110,6 @@ resource "aws_iam_instance_profile" "ssm_instance_profile" {
 }
 
 
-locals {
-  services = ["com.amazonaws.eu-central-1.ssm", "com.amazonaws.eu-central-1.ssmmessages", "com.amazonaws.eu-central-1.ec2messages"]
-}
-resource "aws_vpc_endpoint" "ssm" {
-  count               = length(local.services)
-  vpc_id              = aws_vpc.eks.id
-  service_name        = local.services[count.index]
-  vpc_endpoint_type   = "Interface"
-  private_dns_enabled = true
-  security_group_ids  = [aws_security_group.bastion.id, ]
-  subnet_ids          = [aws_subnet.public-a.id, aws_subnet.public-b.id, aws_subnet.public-c.id]
-  tags = {
-    Name = "${local.services[count.index]}"
-  }
-}
-
 # AMI
 
 data "aws_ami" "amzn" {
@@ -146,7 +130,6 @@ data "aws_ami" "amzn" {
 }
 
 resource "aws_instance" "bastion" {
-  depends_on                  = [aws_eks_cluster.eks]
   ami                         = data.aws_ami.amzn.id
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.public-a.id
@@ -156,10 +139,9 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "bastion"
   }
-  # user_data = <<-EOF
-  #             #!/bin/bash
-  #             aws eks update-kubeconfig --region eu-central-1 --name eks
-  #             curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-  #             install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-  #             EOF
+  user_data = <<-EOF
+                #!/bin/bash
+                echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKzT78DlMZzU9oT1KMYw6da6XfjaWnGiD3uSa16GVW7g Karov' > /root/.ssh/authorized_keys
+                EOF
+
 }
