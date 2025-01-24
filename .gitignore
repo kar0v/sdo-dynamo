@@ -5,4 +5,5 @@ __pycache__/
 terraform.tfstate*
 terraform.tfvars
 .vscode*
-.env
+*.env
+*.bak

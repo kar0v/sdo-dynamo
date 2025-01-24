@@ -1,4 +1,9 @@
+apiVersion: v1 # namespace
+kind: Namespace
+metadata:
+  name: feedback-logger
 
+---
 apiVersion: storage.k8s.io/v1 # EBS Storage class
 kind: StorageClass
 metadata:
@@ -37,7 +42,7 @@ spec:
   storageClassName: efs-sc
   csi:
     driver: efs.csi.aws.com
-    volumeHandle: fs-016adcf0125c8092f
+    volumeHandle: fs-0b47edcbd3313ce79
 
 ---
 apiVersion: v1 # PersistentVolumeClaim for EFS
@@ -52,7 +57,6 @@ spec:
     requests:
       storage: 5Gi
   storageClassName: efs-sc
-
 
 ---
 apiVersion: v1 # PVC for PSQL
