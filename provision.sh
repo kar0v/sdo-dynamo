@@ -26,4 +26,4 @@ sed -i.bak "s/fs-.*\"/fs-${EFS_ID}\"/g" "${SCRIPT_DIR}"/deployment.yaml
 kubectl apply -f "${SCRIPT_DIR}"/deployment.yaml
 kubectl config set-context --current --namespace feedback-logger
 sleep 30
-kubectl get pods
+kubectl get svc -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}' && echo
