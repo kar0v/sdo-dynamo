@@ -47,3 +47,7 @@ The files that are uploaded as part of the feedback process are stored on an EFS
 Security best practices are taken into account and could be even taken a step further by disabling public endpoint access and using only private endpoint access. 
 
 Currently the var.allowed_ips is a cidr range with only my IP in it. Check out the terraform.tfvars.example file. 
+
+Nodes are deployed in private subnets only and egress access to the applications is allowed only through an ELB which is created by the k8s service. 
+
+Pod to pod communication is currently unrestricted, but can be further restricted by using network policies, which EKS supports as part of the CNI. 
