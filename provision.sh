@@ -22,7 +22,7 @@ cd "${SCRIPT_DIR}" || exit
 aws eks update-kubeconfig --region eu-central-1 --name "${EKS_CLUSTER_NAME}"
 
 #change the volumeHandle: fs-*** with efs id in the yaml file
-sed -i.bak "s/fs-.*\"/fs-${EFS_ID}\"/g" "${SCRIPT_DIR}"/deployment.yaml
+sed -i.bak "s/fs-.*/${EFS_ID}/g" "${SCRIPT_DIR}"/deployment.yaml
 kubectl apply -f "${SCRIPT_DIR}"/deployment.yaml
 kubectl config set-context --current --namespace feedback-logger
 sleep 30
