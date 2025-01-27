@@ -42,3 +42,8 @@ I've already developed this application for another task, so I decided to direct
 I've containerized it along with the PSQL database and am using a pure redis image.
 The /var/lib/postgres directory is stored on an EBS Volume
 The files that are uploaded as part of the feedback process are stored on an EFS Share. 
+
+## Security
+Security best practices are taken into account and could be even taken a step further by disabling public endpoint access and using only private endpoint access. 
+
+Currently the var.allowed_ips is a cidr range with only my IP in it. Check out the terraform.tfvars.example file. 
