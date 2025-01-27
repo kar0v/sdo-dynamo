@@ -47,6 +47,7 @@ module "eks" {
   cluster_version = "1.29"
 
   cluster_endpoint_public_access           = true
+  cluster_endpoint_public_access_cidrs     = var.allowed_ips
   enable_cluster_creator_admin_permissions = true
 
   cluster_addons = {
